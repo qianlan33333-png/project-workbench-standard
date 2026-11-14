@@ -23,12 +23,15 @@ try {
     const errors=[];
     page.on('pageerror',e=>errors.push(e.message));
     await page.goto(launcher);
-    if(width===390){
-      const open=page.getByRole('button',{name:'打开侧边栏',exact:true});
-      if(await open.isVisible())await open.click();
-    }
     const knowledge=page.getByRole('button',{name:'知识库',exact:true});
-    if(!await knowledge.isVisible())await page.getByRole('button',{name:'更多',exact:true}).click();
+    const open=page.getByRole('button',{name:'打开侧边栏',exact:true});
+    const more=page.getByRole('button',{name:'更多',exact:true});
+    await knowledge.or(open).or(more).filter({visible:true}).first().waitFor({state:'visible'});
+    if (!await knowledge.isVisible() && await open.isVisible()) {
+      await open.click();
+      await knowledge.or(more).filter({visible:true}).first().waitFor({state:'visible'});
+    }
+    if (!await knowledge.isVisible()) await more.click();
     await knowledge.click();
     await page.getByRole('heading',{name:'知识库',exact:true}).waitFor();
     const del=page.getByRole('button',{name:'删除 '+name,exact:true});
