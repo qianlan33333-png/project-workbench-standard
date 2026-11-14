@@ -40,7 +40,7 @@ assert worker("/personal/settings")["sessionId"] == session
 assert worker("/health") == {"ready":True,"backgroundReady":True}
 
 def asset_version(resource):
-    return next(r["currentVersion"] for r in worker("/resources") if r["id"] == resource)
+    return next(r.get("currentVersion", "") for r in worker("/resources") if r["id"] == resource)
 
 def page(resource, version, section):
     return worker(f"/resource-page?resourceId={resource}&version={version}&section={section}")
@@ -72,7 +72,7 @@ if phase == "first":
         if version:
             break
         time.sleep(1)
-    assert version == run["runId"], (version,run)
+    assert version == run["runId"], (version,run,worker("/resource-sync-status?resourceId=install-library"))
     data=page("install-library",version,"rows")
     assert data["count"]==2 and data["records"][0]["fields"]["title"]=="clean-install-marker"
     (root/"state.json").write_text(json.dumps({"session":session,"version":version}))
