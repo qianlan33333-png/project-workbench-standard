@@ -7,4 +7,4 @@
 - 自动应答、处理明细、运营任务、审批及回执
 - 可配置的飞书、微信、企微网关与标准 MCP
 
-从 [Releases](https://github.com/qianlan33333-png/project-workbench-standard/releases) 下载标准版发布包和 SHA-256 校验文件。请使用自己的数据库、模型和渠道配置。
+从 [Releases](https://github.com/qianlan33333-png/project-workbench-standard/releases) 下载 Linux x86-64 标准版发布包和 SHA-256 校验文件，按 [安装说明](INSTALL.md) 使用自己的数据库、模型和渠道配置。
