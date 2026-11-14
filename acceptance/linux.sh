@@ -60,10 +60,11 @@ SQL
 done
 
 python3 "$check_dir/temporal-config.py" > "$root/temporal.json"
-temporal/temporal-server --config-file "$root/temporal.json" start --allow-no-auth >"$root/temporal.log" 2>&1 &
+temporal/temporal-server --config-file "$root/temporal.json" start >"$root/temporal.log" 2>&1 &
 pids+=("$!")
 for i in {1..90}; do
   if (echo >/dev/tcp/127.0.0.1/7233) 2>/dev/null; then break; fi
+  kill -0 "${pids[-1]}" 2>/dev/null
   sleep 1
 done
 
@@ -140,10 +141,11 @@ kill "$connector_pid" "$host_pid" "$worker_pid"
 wait "$connector_pid" "$host_pid" "$worker_pid" || true
 kill "${pids[0]}"
 wait "${pids[0]}" || true
-temporal/temporal-server --config-file "$root/temporal.json" start --allow-no-auth >"$root/temporal.log" 2>&1 &
+temporal/temporal-server --config-file "$root/temporal.json" start >"$root/temporal.log" 2>&1 &
 pids+=("$!")
 for i in {1..90}; do
   if (echo >/dev/tcp/127.0.0.1/7233) 2>/dev/null; then break; fi
+  kill -0 "${pids[-1]}" 2>/dev/null
   sleep 1
 done
 start_app
