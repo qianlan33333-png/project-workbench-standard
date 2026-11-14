@@ -55,6 +55,10 @@ if phase == "first":
     tools = request(7381,"/mcp",{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}},mcp=True)
     names = {r["name"] for r in tools["result"]["tools"]}
     assert {"resource_list","batch_generate","program_run","run_get"} <= names, sorted(names)
+    result = request(7381, "/mcp", {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{
+        "name":"resource_list","arguments":{}}}, mcp=True)
+    assert result["result"]["structuredContent"]["resources"] == [], result
+    print("Standard MCP tools discovery and resource_list passed")
     model = request(7382,"/model",{"lane":"batch","method":{"instructions":"Return the fixture marker","maxOutputTokens":80},"input":{}})
     assert model["text"] == "CLEAN-LINUX-MODEL-OK", model
     print("Harness model bridge passed with a local provider fixture")
