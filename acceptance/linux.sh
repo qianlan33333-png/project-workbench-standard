@@ -94,6 +94,7 @@ for i in {1..60}; do
 done
 export DEEPSEEK_BASE_URL=http://127.0.0.1:17770 DEEPSEEK_API_KEY=local-fixture-provider-key
 mkdir -p "$DSH_HOME" "$WORKBENCH_PERSONAL_WORKSPACE" "$WORKBENCH_VAULT_ROOT" "$WORKBENCH_CHANNEL_LINK_DIR"
+ln -sfn "$PWD/runtime/node_modules" "$DSH_HOME/node_modules"
 printf '[]\n' > "$WORKBENCH_CHANNEL_CONFIG"
 sql workbench -e 'CREATE TABLE install_fixture (id INT PRIMARY KEY, title VARCHAR(100)); INSERT INTO install_fixture VALUES (1,"clean-install-marker"), (2,"second-row");'
 python3 "$check_dir/model-fixture.py" >"$root/model.log" 2>&1 &

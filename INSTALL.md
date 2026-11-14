@@ -47,10 +47,11 @@ export DSH_BUNDLED_SKILL_DIR="$PWD/skills"
 export PATH="$PWD/node/bin:$PATH"
 umask 077
 mkdir -p "$DSH_HOME" "$WORKBENCH_PERSONAL_WORKSPACE" "$WORKBENCH_VAULT_ROOT" "$WORKBENCH_CHANNEL_LINK_DIR"
+ln -sfn "$PWD/runtime/node_modules" "$DSH_HOME/node_modules"
 test -e "$WORKBENCH_CHANNEL_CONFIG" || printf '[]\n' > "$WORKBENCH_CHANNEL_CONFIG"
 ```
 
-将私有环境持久保存并由以下三个服务共用。先启动 Worker，确认 `curl -fsS http://127.0.0.1:7381/health` 返回 `ready: true`，然后启动 Harness，最后按需启动渠道服务。以下三条命令各自持续运行，可由 systemd 等服务管理器启动。
+Harness 从自己的配置目录加载工作台插件，`node_modules` 链接指向当前解包目录。切换到新版本时，同步更新这个链接。将私有环境持久保存并由以下三个服务共用。先启动 Worker，确认 `curl -fsS http://127.0.0.1:7381/health` 返回 `ready: true`，然后启动 Harness，最后按需启动渠道服务。以下三条命令各自持续运行，可由 systemd 等服务管理器启动。
 
 ```sh
 bin/workbench-worker
