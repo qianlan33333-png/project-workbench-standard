@@ -19,14 +19,20 @@ try {
     await writeFile(join(folder,'说明.md'),'# 导入标记 '+width+'\n\n![[地图.canvas]]');
     await writeFile(join(folder,'地图.canvas'),'{}');
     assert.equal((await call('/resources',{id,name,kind:'database',sections:[{id:'content',name:'内容',fields:['value']}]})).status,200);
-    const page=await browser.newPage({viewport:{width,height:900},isMobile:width===390,hasTouch:width===390,acceptDownloads:true});
+    const page=await browser.newPage({viewport:{width,height:900},locale:'zh-CN',isMobile:width===390,hasTouch:width===390,acceptDownloads:true});
     const errors=[];
     page.on('pageerror',e=>errors.push(e.message));
     await page.goto(launcher);
     const knowledge=page.getByRole('button',{name:'知识库',exact:true});
-    const open=page.getByRole('button',{name:'打开侧边栏',exact:true});
-    const more=page.getByRole('button',{name:'更多',exact:true});
-    await knowledge.or(open).or(more).filter({visible:true}).first().waitFor({state:'visible'});
+    const open=page.getByRole('button',{name:/^(打开侧边栏|Open sidebar)$/});
+    const more=page.getByRole('button',{name:/^(更多|More)$/});
+    try {
+      await knowledge.or(open).or(more).filter({visible:true}).first().waitFor({state:'visible',timeout:12000});
+    } catch (error) {
+      const controls=await page.getByRole('button').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('aria-label')||node.textContent.trim()).filter(Boolean));
+      console.error(JSON.stringify({width,language:await page.locator('html').getAttribute('lang'),controls,errors}));
+      throw error;
+    }
     if (!await knowledge.isVisible() && await open.isVisible()) {
       await open.click();
       await knowledge.or(more).filter({visible:true}).first().waitFor({state:'visible'});
