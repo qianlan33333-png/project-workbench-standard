@@ -2,8 +2,8 @@ name: Clean Linux release acceptance
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: Draft release tag to verify
+      release_id:
+        description: ID of the draft release to verify
         required: true
         type: string
       sha256:
@@ -21,12 +21,18 @@ jobs:
       - name: Download the exact draft assets
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_ID: ${{ inputs.release_id }}
           EXPECTED_SHA256: ${{ inputs.sha256 }}
         run: |
           mkdir "$RUNNER_TEMP/workbench-assets"
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'workbench-standard-linux-amd64.tar.gz*' --dir "$RUNNER_TEMP/workbench-assets"
           cd "$RUNNER_TEMP/workbench-assets"
+          [[ "$RELEASE_ID" =~ ^[0-9]+$ ]]
+          assets=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --jq '.assets')
+          for name in workbench-standard-linux-amd64.tar.gz workbench-standard-linux-amd64.tar.gz.sha256; do
+            id=$(jq -r --arg name "$name" '.[] | select(.name==$name and .state=="uploaded") | .id' <<<"$assets")
+            [[ "$id" =~ ^[0-9]+$ ]]
+            gh api -H 'Accept: application/octet-stream' "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "$name"
+          done
           sha256sum -c workbench-standard-linux-amd64.tar.gz.sha256
           printf '%s  workbench-standard-linux-amd64.tar.gz\n' "$EXPECTED_SHA256" | sha256sum -c
       - name: Install from scratch and verify the installed product
