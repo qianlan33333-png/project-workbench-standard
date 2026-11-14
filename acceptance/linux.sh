@@ -60,7 +60,7 @@ SQL
 done
 
 python3 "$check_dir/temporal-config.py" > "$root/temporal.json"
-temporal/temporal-server --config-file "$root/temporal.json" start >"$root/temporal.log" 2>&1 &
+temporal/temporal-server --config-file "$root/temporal.json" start --allow-no-auth >"$root/temporal.log" 2>&1 &
 pids+=("$!")
 for i in {1..90}; do
   if (echo >/dev/tcp/127.0.0.1/7233) 2>/dev/null; then break; fi
@@ -82,6 +82,15 @@ export WORKBENCH_SOURCE_INSTALL_MYSQL_DSN="$WORKBENCH_MYSQL_DSN"
 export TEMPORAL_ADDRESS=127.0.0.1:7233 TEMPORAL_NAMESPACE=workbench
 export WORKBENCH_PUBLIC_HOST=127.0.0.1 DSH_BUNDLED_SKILL_DIR="$PWD/skills"
 export WORKBENCH_DEPLOYMENT_MARKER="$root/.deploying"
+curl --retry 3 -fsSL 'https://github.com/temporalio/cli/releases/download/v1.10.0/temporal_cli_1.10.0_linux_amd64.tar.gz' -o "$root/temporal-cli.tar.gz"
+printf '521f461f3d108902763bb71e85cd0fd382dc9357b59604ae03da6ae734d16890  %s\n' "$root/temporal-cli.tar.gz" | sha256sum -c
+mkdir "$root/temporal-cli"
+tar -xzf "$root/temporal-cli.tar.gz" -C "$root/temporal-cli"
+"$root/temporal-cli/temporal" operator namespace create --address "$TEMPORAL_ADDRESS" --namespace "$TEMPORAL_NAMESPACE" --retention 168h
+for i in {1..60}; do
+  if "$root/temporal-cli/temporal" operator namespace describe --address "$TEMPORAL_ADDRESS" --namespace "$TEMPORAL_NAMESPACE" >/dev/null 2>&1; then break; fi
+  sleep 1
+done
 export DEEPSEEK_BASE_URL=http://127.0.0.1:17770 DEEPSEEK_API_KEY=local-fixture-provider-key
 mkdir -p "$DSH_HOME" "$WORKBENCH_PERSONAL_WORKSPACE" "$WORKBENCH_VAULT_ROOT" "$WORKBENCH_CHANNEL_LINK_DIR"
 printf '[]\n' > "$WORKBENCH_CHANNEL_CONFIG"
@@ -95,7 +104,7 @@ start_app() {
   pids+=("$worker_pid")
   for i in {1..90}; do
     if curl -fsS http://127.0.0.1:7381/health 2>/dev/null | grep -q '"backgroundReady":true'; then break; fi
-    kill -0 "$worker_pid"
+    kill -0 "$worker_pid" 2>/dev/null
     sleep 1
   done
   curl -fsS http://127.0.0.1:7381/health | grep -q '"backgroundReady":true'
@@ -131,7 +140,7 @@ kill "$connector_pid" "$host_pid" "$worker_pid"
 wait "$connector_pid" "$host_pid" "$worker_pid" || true
 kill "${pids[0]}"
 wait "${pids[0]}" || true
-temporal/temporal-server --config-file "$root/temporal.json" start >"$root/temporal.log" 2>&1 &
+temporal/temporal-server --config-file "$root/temporal.json" start --allow-no-auth >"$root/temporal.log" 2>&1 &
 pids+=("$!")
 for i in {1..90}; do
   if (echo >/dev/tcp/127.0.0.1/7233) 2>/dev/null; then break; fi

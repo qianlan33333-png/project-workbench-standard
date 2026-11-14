@@ -13,10 +13,18 @@ cd workbench-standard
 
 ## 2. 准备持久服务
 
-准备一个空 MySQL 数据库供工作台使用，独立创建 Temporal 的默认库和可见性库。使用包中标注的 Temporal 版本对应的官方 SQL Schema 工具初始化两个库，再配置 Temporal Server 的 MySQL 持久化。MySQL 与 Temporal 可由已有的服务管理器托管。工作台首次启动时创建自己的业务表和 Temporal namespace。
+准备一个空 MySQL 数据库供工作台使用，独立创建 Temporal 的默认库和可见性库。使用包中标注的 Temporal 版本对应的官方 SQL Schema 工具初始化两个库，再配置 Temporal Server 的 MySQL 持久化。MySQL 与 Temporal 可由已有的服务管理器托管。Worker 首次启动时创建工作台业务表。启动 Worker 前，使用官方 Temporal CLI 在已运行的 Temporal 服务中创建工作台命名空间。
 
 - [Temporal 自托管部署](https://docs.temporal.io/self-hosted-guide/deployment)
+- [Temporal CLI 安装](https://docs.temporal.io/cli)
 - [Temporal SQL Schema 工具](https://github.com/temporalio/temporal/tree/v1.32.2/tools/sql)
+
+```sh
+temporal operator namespace create --address 127.0.0.1:7233 --namespace workbench --retention 168h
+temporal operator namespace describe --address 127.0.0.1:7233 --namespace workbench
+```
+
+请按实际部署地址和命名空间修改上述参数，并在下一节使用相同的值。
 
 ## 3. 启动工作台
 
